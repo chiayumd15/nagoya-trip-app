@@ -489,7 +489,7 @@ const PHOTO_TIPS = [
 
 /* ====== 行李 Checklist ====== */
 const CHECKLIST = [
-  { cat:'證件・票券', items:['護照（效期 2027/4 以後）',{ t:'星宇 機票電子檔（截圖）；起飛前 48 小時可線上報到', url:'https://www.starlux-airlines.com/zh-TW/manage/check-in' },'飯店確認信（名古屋皇冠 ＋ 大阪飯店）',{ t:'Klook 上高地 憑證（截圖＋列印）', url:'https://www.klook.com/zh-TW/activity/132013-nagoya-kamikochi-nature-hiking-day-tour/' },{ t:'吉卜力公園 門票 QR', url:'https://ghibli-park.jp/ticket/' },{ t:'Visit Japan Web 入境 QR（每人各自申請，出發前填好）', url:'https://www.vjw.digital.go.jp/' },'旅遊平安險／不便險 保單','駕照＋日文譯本（若要租車）','台灣身分證（回國）'] },
+  { cat:'證件・票券', items:['護照（效期 2027/4 以後）',{ t:'星宇 機票電子檔（截圖）；起飛前 48 小時可線上報到', url:'https://www.starlux-airlines.com/zh-TW/check-in-fly/check-in-now/online-check-in' },'飯店確認信（名古屋皇冠 ＋ 大阪飯店）',{ t:'Klook 上高地 憑證（截圖＋列印）', url:'https://www.klook.com/zh-TW/activity/132013-nagoya-kamikochi-nature-hiking-day-tour/' },{ t:'吉卜力公園 門票 QR', url:'https://ghibli-park.jp/ticket/' },{ t:'Visit Japan Web 入境 QR（每人各自申請，出發前填好）', url:'https://www.vjw.digital.go.jp/' },'旅遊平安險／不便險 保單','駕照＋日文譯本（若要租車）','台灣身分證（回國）'] },
   { cat:'錢・卡', items:['日幣現金 每人 ¥30,000–50,000（小店、神社、上高地多只收現金）','信用卡 ×2（海外回饋、確認已開海外刷卡）','Apple Pay Suica 已加入錢包並儲值','零錢包（¥100 投幣洗手間、¥500 明神池）','記帳：用 app「記帳」分頁'] },
   { cat:'3C', items:['手機充電器＋線','行動電源（100Wh 以下，手提不託運）','轉接頭（日本 A 型雙扁腳，台灣充電器多數直接可用；三腳的要轉）','eSIM／網卡 已購買安裝（建議 Klook／KKday eSIM 10 天）或 WiFi 分享器','相機・記憶卡・電池','耳機','Apple Watch 充電線',{ t:'Google Maps 離線地圖（名古屋・長野・大阪）已下載', url:'https://support.google.com/maps/answer/6291838' }] },
   { cat:'衣物（名古屋 15–23°C／上高地 3–13°C）', items:['長袖上衣 ×4','薄外套（風衣／針織）','上高地：fleece 保暖層＋防風防水外套','發熱衣 ×1（上高地）','長褲 ×3','內衣褲 襪子 ×7','好走防滑的鞋（上高地 走 7 km）','拖鞋（飯店有，可省）','帽子、手套（上高地早晚）','太陽眼鏡','折傘＋輕便雨衣','睡衣（飯店有浴衣）'] },
