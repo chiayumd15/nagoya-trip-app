@@ -5,7 +5,7 @@ window.TRIP = (() => {
 const PEOPLE = [
   { id:'ycg', name:'楊才廣', group:'yang', room:5, breakfast:true },
   { id:'hst', name:'黃思婷', group:'yang', room:5, breakfast:true },
-  { id:'ycy', name:'先行組喻', group:'yang', room:6, breakfast:true },
+  { id:'ycy', name:'楊家喻', group:'yang', room:6, breakfast:true },
   { id:'zzy', name:'張志郁', group:'yang', room:6, breakfast:true },
   { id:'ysj', name:'楊書竣', group:'yang', room:1, breakfast:true },
   { id:'cyk', name:'陳永康', group:'chen', room:3, breakfast:true },

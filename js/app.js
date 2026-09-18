@@ -353,7 +353,7 @@ function buildContext() {
   const wx = Object.entries(state.wx).map(([k, v]) => { const dd = v.data && v.data.daily; if (!dd) return ''; return `${T.WX_POINTS[k].name}: ` + dd.time.slice(0, 16).map((x, i) => `${x.slice(5)} ${wmo(dd.weather_code[i])[1]} ${Math.round(dd.temperature_2m_max[i])}/${Math.round(dd.temperature_2m_min[i])}° 雨${dd.precipitation_probability_max[i]}%`).join(', '); }).filter(Boolean).join('\n');
   const news = T.NEWS.map(n => `[${n.tag}] ${n.title}：${n.body}`).join('\n');
   return `你是「名古屋・上高地 兩家旅」旅遊手帳 app 的 AI 小幫手，用繁體中文（台灣用語）親切、具體、簡短地回答。今天是 ${t}${state.geo ? `，使用者目前 GPS 位置 ${state.geo.lat.toFixed(4)},${state.geo.lon.toFixed(4)}` : ''}。提問者：${m ? `${m.name}（${T.GROUPS[m.group].name}，房${m.room}，${m.breakfast ? '含早餐' : '不含早餐'}）` : '未選擇'}。app 目前顯示的日子：${d.date} ${d.title}。
-旅行：2026/10/10–10/19，共 11 人兩家族。先行組 5 人（楊才廣、黃思婷、先行組喻、張志郁、楊書竣）10/10 JX822 TPE10:15→KIX14:00，先玩大阪京都，10/13 新幹線到名古屋。直飛組 6 人（陳永康、楊淑媛、陳玟玲、高魁澤、陳玟潔、陳玟綺）10/13 星宇 TPE15:55→NGO18:45。全員 10/19 JX839 NGO19:55→TPE22:00。
+旅行：2026/10/10–10/19，共 11 人兩家族。先行組 5 人（楊才廣、黃思婷、楊家喻、張志郁、楊書竣）10/10 JX822 TPE10:15→KIX14:00，先玩大阪京都，10/13 新幹線到名古屋。直飛組 6 人（陳永康、楊淑媛、陳玟玲、高魁澤、陳玟潔、陳玟綺）10/13 星宇 TPE15:55→NGO18:45。全員 10/19 JX839 NGO19:55→TPE22:00。
 飯店：名古屋クラウンホテル（名古屋市中区栄1-8-33，+81-52-211-6633，伏見站步行5分，有天然溫泉），10/13–10/19 六晚，總價 JPY 1,071,200。
 ${rooms}
 匯率：${rateLine()}。
