@@ -9,8 +9,13 @@
 window.APP_CONFIG = {
   tripId: 'nagoya2026',
   firebase: {
-    // apiKey: "AIza...", authDomain: "xxx.firebaseapp.com", databaseURL: "https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app",
-    // projectId: "xxx", storageBucket: "xxx.appspot.com", messagingSenderId: "...", appId: "..."
+    apiKey: "AIzaSyAYo7cyeN6EpY9LHN0YMhMNRcJ8ag5SYGI",
+    authDomain: "nagoya-trip-bonnie-2026.firebaseapp.com",
+    databaseURL: "https://nagoya-trip-bonnie-2026-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "nagoya-trip-bonnie-2026",
+    storageBucket: "nagoya-trip-bonnie-2026.firebasestorage.app",
+    messagingSenderId: "788949909814",
+    appId: "1:788949909814:web:2789737a55bc696ab87397"
   },
   // ── AI 小幫手：二選一 ──
   // (推薦) Cloudflare Worker 中繼：key 放在 Worker，app 只帶家族密碼。設定見 cloudflare-worker/README.md
