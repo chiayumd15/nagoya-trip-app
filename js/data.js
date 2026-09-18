@@ -5,7 +5,7 @@ window.TRIP = (() => {
 const PEOPLE = [
   { id:'ycg', name:'楊才廣', group:'yang', room:5, breakfast:true },
   { id:'hst', name:'黃思婷', group:'yang', room:5, breakfast:true },
-  { id:'ycy', name:'楊家喻', group:'yang', room:6, breakfast:true },
+  { id:'ycy', name:'先行組喻', group:'yang', room:6, breakfast:true },
   { id:'zzy', name:'張志郁', group:'yang', room:6, breakfast:true },
   { id:'ysj', name:'楊書竣', group:'yang', room:1, breakfast:true },
   { id:'cyk', name:'陳永康', group:'chen', room:3, breakfast:true },
@@ -15,17 +15,17 @@ const PEOPLE = [
   { id:'cwj', name:'陳玟潔', group:'chen', room:4, breakfast:false },
   { id:'cwq', name:'陳玟綺', group:'chen', room:4, breakfast:true },
 ];
-const GROUPS = { yang:{ name:'楊家', short:'楊', color:'var(--persimmon)' }, chen:{ name:'陳家', short:'陳', color:'var(--sky)' } };
+const GROUPS = { yang:{ name:'先行組（10/10 出發・先玩大阪）', short:'先行', color:'var(--persimmon)' }, chen:{ name:'直飛組（10/13 直飛名古屋）', short:'直飛', color:'var(--sky)' } };
 
 const FLIGHTS = [
   { id:'f1', group:'yang', date:'2026-10-10', dow:'六', no:'JX822', airline:'星宇航空', plane:'Airbus A350-1000',
     from:{ code:'TPE', name:'臺灣桃園國際機場', terminal:'第 1 航廈', time:'10:15' },
     to:{ code:'KIX', name:'關西國際機場', terminal:'第 1 航廈', time:'14:00' }, duration:'2 小時 45 分',
-    note:'楊家 5 人。建議 07:45 前抵達桃機 T1（起飛前 2.5 小時），星宇櫃台在 T1 出境大廳。' },
+    note:'先行組 5 人。建議 07:45 前抵達桃機 T1（起飛前 2.5 小時），星宇櫃台在 T1 出境大廳。' },
   { id:'f2', group:'chen', date:'2026-10-13', dow:'二', no:'星宇（航班號待補）', airline:'星宇航空', plane:'—',
     from:{ code:'TPE', name:'臺灣桃園國際機場', terminal:'第 1 航廈', time:'15:55' },
     to:{ code:'NGO', name:'中部國際機場（新特麗亞）', terminal:'第 1 航廈', time:'18:45' }, duration:'2 小時 50 分',
-    verify:true, note:'陳家 6 人。經濟艙約 TWD 16,476/人。抵達後楊家會在飯店等（或約在名古屋站一起吃晚餐）。' },
+    verify:true, note:'直飛組 6 人。經濟艙約 TWD 16,476/人。抵達後先行組會在飯店等（或約在名古屋站一起吃晚餐）。' },
   { id:'f3', group:'all', date:'2026-10-19', dow:'一', no:'JX839', airline:'星宇航空', plane:'Airbus A330-900neo',
     from:{ code:'NGO', name:'中部國際機場（新特麗亞）', terminal:'第 1 航廈', time:'19:55' },
     to:{ code:'TPE', name:'臺灣桃園國際機場', terminal:'第 1 航廈', time:'22:00' }, duration:'3 小時 05 分',
@@ -70,7 +70,7 @@ const OSAKA_HOTEL_PICKS = [
 
 /* ====== 景點 ====== */
 const SPOTS = {
-  // ---- 關西（楊家）----
+  // ---- 關西（先行組）----
   dotonbori:{ name:'道頓堀・心齋橋', jp:'道頓堀', area:'大阪', coords:[34.6687,135.5013],
     intro:'大阪的招牌夜景，固力果跑跑人看板、螃蟹道樂大招牌都在這條運河兩岸。心齋橋筋商店街一路連到難波，藥妝、服飾一次逛完。',
     hours:'全天；商店約 10:00–21:00', cost:'免費',
@@ -251,7 +251,7 @@ const RESTAURANTS = {
 
 /* ====== 每日行程 ====== */
 const DAYS = [
-  { id:'d1010', date:'2026-10-10', dow:'六', title:'楊家出發 → 大阪 道頓堀', group:'yang', wx:'osaka', hero:'✈️',
+  { id:'d1010', date:'2026-10-10', dow:'六', title:'先行組出發 → 大阪 道頓堀', group:'yang', wx:'osaka', hero:'✈️',
     items:[
       { time:'07:30', type:'transport', title:'抵達桃園機場 T1', desc:'星宇 JX822 櫃台報到、託運。桃機 T1 星宇貴賓室不在此票種。' },
       { time:'10:15', type:'flight', title:'JX822 桃園 → 關西', desc:'A350-1000，2 小時 45 分，14:00 抵達 KIX T1。' },
@@ -290,21 +290,21 @@ const DAYS = [
     rain:['大阪城天守內是博物館，雨天 OK','改：海遊館（水族館）＋天保山摩天輪，或 難波 PARKS、阿倍野 HARUKAS 300 展望台（室內）'],
     notes:['如果楊書竣想去 USJ，可用這天整天，但 11 月萬聖節活動人潮多，建議買快速通關券'] },
 
-  { id:'d1013', date:'2026-10-13', dow:'二', title:'大阪 → 名古屋（新幹線）｜陳家抵達 18:45｜11 人會合', group:'all', wx:'nagoya', hero:'🚄',
+  { id:'d1013', date:'2026-10-13', dow:'二', title:'大阪 → 名古屋（新幹線）｜直飛組抵達 18:45｜11 人會合', group:'all', wx:'nagoya', hero:'🚄',
     items:[
-      { time:'09:30', type:'transport', title:'（楊家）難波 → 新大阪', desc:'御堂筋線 難波 → 新大阪 15 分（¥290）。', group:'yang', nav:'spot:shinosaka' },
-      { time:'10:30', type:'transport', title:'（楊家）新幹線 新大阪 → 名古屋', desc:'のぞみ 約 50 分（自由席約 ¥6,680／指定席約 ¥7,200）。5 人有行李建議坐指定席（車廂最後一排後方可放大行李，需預約「特大行李放置處」）。用 smartEX App 或窗口買票。', group:'yang' },
-      { time:'11:30', type:'meal', title:'（楊家）午餐：名古屋站', desc:'新幹線月台「住よし」棊子麵，或 ESCA 地下街 矢場とん。順便排 ぴよりん。', group:'yang', nav:'spot:nagoyasta' },
-      { time:'13:30', type:'hotel', title:'（楊家）名古屋皇冠飯店 先寄行李／15:00 Check-in', desc:'名古屋站 → 計程車 10 分（¥1,500）或 東山線 名古屋 → 伏見 1 站，走 5 分。', group:'yang', nav:'hotel' },
-      { time:'14:00', type:'free', title:'（楊家）下午自由：白川公園散步、榮購物或飯店溫泉休息', desc:'名古屋市科學館就在飯店旁邊（週二有開）。', group:'yang' },
-      { time:'13:00', type:'transport', title:'（陳家）抵達桃園機場 T1', desc:'星宇櫃台報到，15:55 起飛。', group:'chen' },
-      { time:'15:55', type:'flight', title:'（陳家）星宇 桃園 → 名古屋', desc:'2 小時 50 分，18:45 抵達 NGO T1。', group:'chen' },
-      { time:'18:45', type:'transport', title:'（陳家）中部機場 → 名鐵名古屋', desc:'入境約 45–60 分。名鐵「ミュースカイ μ-Sky」全車指定 28 分（約 ¥1,300 含特別車輛券），或 特急（¥890，35 分）。到名鐵名古屋後轉 東山線 到 伏見（1 站）。', group:'chen', nav:'spot:nagoyasta' },
-      { time:'20:00', type:'meal', title:'晚餐（簡單吃）：名古屋站 ESCA 地下街 11 人會合', desc:'楊家 19:45 到名古屋站等陳家，一起在 ESCA 吃：矢場とん（味噌豬排）、山本屋本店（味噌煮込）、風来坊（手羽先）都在同一條地下街，可各自選。太累就便利商店＋飯店。', nav:'q:エスカ地下街 名古屋' },
+      { time:'09:30', type:'transport', title:'（先行組）難波 → 新大阪', desc:'御堂筋線 難波 → 新大阪 15 分（¥290）。', group:'yang', nav:'spot:shinosaka' },
+      { time:'10:30', type:'transport', title:'（先行組）新幹線 新大阪 → 名古屋', desc:'のぞみ 約 50 分（自由席約 ¥6,680／指定席約 ¥7,200）。5 人有行李建議坐指定席（車廂最後一排後方可放大行李，需預約「特大行李放置處」）。用 smartEX App 或窗口買票。', group:'yang' },
+      { time:'11:30', type:'meal', title:'（先行組）午餐：名古屋站', desc:'新幹線月台「住よし」棊子麵，或 ESCA 地下街 矢場とん。順便排 ぴよりん。', group:'yang', nav:'spot:nagoyasta' },
+      { time:'13:30', type:'hotel', title:'（先行組）名古屋皇冠飯店 先寄行李／15:00 Check-in', desc:'名古屋站 → 計程車 10 分（¥1,500）或 東山線 名古屋 → 伏見 1 站，走 5 分。', group:'yang', nav:'hotel' },
+      { time:'14:00', type:'free', title:'（先行組）下午自由：白川公園散步、榮購物或飯店溫泉休息', desc:'名古屋市科學館就在飯店旁邊（週二有開）。', group:'yang' },
+      { time:'13:00', type:'transport', title:'（直飛組）抵達桃園機場 T1', desc:'星宇櫃台報到，15:55 起飛。', group:'chen' },
+      { time:'15:55', type:'flight', title:'（直飛組）星宇 桃園 → 名古屋', desc:'2 小時 50 分，18:45 抵達 NGO T1。', group:'chen' },
+      { time:'18:45', type:'transport', title:'（直飛組）中部機場 → 名鐵名古屋', desc:'入境約 45–60 分。名鐵「ミュースカイ μ-Sky」全車指定 28 分（約 ¥1,300 含特別車輛券），或 特急（¥890，35 分）。到名鐵名古屋後轉 東山線 到 伏見（1 站）。', group:'chen', nav:'spot:nagoyasta' },
+      { time:'20:00', type:'meal', title:'晚餐（簡單吃）：名古屋站 ESCA 地下街 11 人會合', desc:'先行組 19:45 到名古屋站等直飛組，一起在 ESCA 吃：矢場とん（味噌豬排）、山本屋本店（味噌煮込）、風来坊（手羽先）都在同一條地下街，可各自選。太累就便利商店＋飯店。', nav:'q:エスカ地下街 名古屋' },
       { time:'21:30', type:'hotel', title:'全員 Check-in 名古屋皇冠飯店', desc:'6 間房，房號分配見「住宿」。泡個溫泉早點睡，明天 9:00 出發。', nav:'hotel' },
     ],
     rain:['移動日不受影響；名古屋站地下街全部有頂'],
-    notes:['新幹線特大行李（三邊合計 160–250 cm）需預約專用座位，否則加收 ¥1,000','陳家：入境時 Visit Japan Web QR、飯店地址「名古屋市中区栄1-8-33」填入境卡'] },
+    notes:['新幹線特大行李（三邊合計 160–250 cm）需預約專用座位，否則加收 ¥1,000','直飛組：入境時 Visit Japan Web QR、飯店地址「名古屋市中区栄1-8-33」填入境卡'] },
 
   { id:'d1014', date:'2026-10-14', dow:'三', title:'國寶犬山城・城下町・鰻魚大餐', group:'all', wx:'inuyama', hero:'🏯',
     swapped:'原 10/18 行程，對調到週三：平日犬山人少，10/18 改去免費的白鳥庭園',
@@ -432,7 +432,7 @@ const MUST = {
     { name:'五平餅', where:'吉卜力 魔法公主之里／犬山 山田五平餅', day:'10/14、10/15' },
     { name:'炭烤岩魚', where:'嘉門次小屋（明神池）', day:'10/16 午' },
     { name:'蘋果派', where:'上高地 五千尺飯店', day:'10/16 午後' },
-    { name:'串炸・章魚燒・大阪燒', where:'大阪 新世界／道頓堀', day:'楊家 10/10–12' },
+    { name:'串炸・章魚燒・大阪燒', where:'大阪 新世界／道頓堀', day:'先行組 10/10–12' },
   ],
   buy:[
     { name:'えびせんべいの里 蝦餅', where:'中部機場 4F', tip:'綜合包 ¥756，紙箱 ¥110，便宜大方送同事' },
@@ -466,8 +466,8 @@ const MUST = {
     { name:'大須觀音 鴿子群飛', when:'10/18', tip:'連拍' },
     { name:'ぴよりん', when:'買到當下', tip:'30 分內會融化' },
     { name:'11 人大合照', when:'名古屋城 金鯱前／河童橋／犬山城／名古屋祭 三英傑花車前', tip:'廣角 0.5x、自拍棒或請路人、每天至少一張' },
-    { name:'伏見稻荷 千本鳥居（楊家）', when:'10/11 08:00 前', tip:'2x 鏡頭壓縮' },
-    { name:'固力果跑跑人（楊家）', when:'10/10 18:30 亮燈後', tip:'戎橋中央' },
+    { name:'伏見稻荷 千本鳥居（先行組）', when:'10/11 08:00 前', tip:'2x 鏡頭壓縮' },
+    { name:'固力果跑跑人（先行組）', when:'10/10 18:30 亮燈後', tip:'戎橋中央' },
   ],
 };
 
@@ -534,7 +534,7 @@ const EMERGENCY = [
   { name:'日本 警察', tel:'110' }, { name:'日本 救護車・消防', tel:'119' },
   { name:'名古屋皇冠飯店', tel:'+81-52-211-6633' },
   { name:'台北駐日經濟文化代表處（東京）急難救助', tel:'+81-80-1009-7179', note:'名古屋屬東京代表處管轄；出發前請再確認' , verify:true },
-  { name:'台北駐大阪經濟文化辦事處 急難救助（楊家關西期間）', tel:'+81-90-8794-4568', verify:true },
+  { name:'台北駐大阪經濟文化辦事處 急難救助（先行組關西期間）', tel:'+81-90-8794-4568', verify:true },
   { name:'外交部 旅外國人急難救助全球免付費專線', tel:'+886-800-085-095' },
   { name:'名古屋醫療中心（中區三の丸，英文可）', tel:'+81-52-951-1111', note:'離飯店計程車 10 分' },
   { name:'星宇航空 客服', tel:'+886-2-2791-1000' },
