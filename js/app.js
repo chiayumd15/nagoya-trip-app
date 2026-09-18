@@ -18,10 +18,10 @@ const state = {
   tab: LS.get('tab', 'home'), me: LS.get('me', null), day: LS.get('day', null),
   settings: Object.assign({ drive: false, openaiKey: '', familyKey: '', model: CFG.OPENAI_MODEL || 'gpt-4o-mini', showOther: false }, LS.get('settings', {})),
   expenses: LS.get('expenses', []), messages: LS.get('messages', []), aiHistory: LS.get('aiHistory', []),
-  checks: LS.get('checks', {}), customChecks: LS.get('customChecks', []),
+  checks: LS.get('checks', {}), customChecks: LS.get('customChecks', []), hiddenChecks: LS.get('hiddenChecks', {}),
   rate: LS.get('rate', null), wx: LS.get('wx', {}), guideSec: LS.get('guideSec', 'spots'), chatMode: LS.get('chatMode', 'group'),
 };
-const save = () => { ['tab','me','day','settings','expenses','messages','aiHistory','checks','customChecks','rate','wx','guideSec','chatMode'].forEach(k => LS.set(k, state[k])); };
+const save = () => { ['tab','me','day','settings','expenses','messages','aiHistory','checks','customChecks','hiddenChecks','rate','wx','guideSec','chatMode'].forEach(k => LS.set(k, state[k])); };
 const me = () => T.PEOPLE.find(p => p.id === state.me) || null;
 const person = id => T.PEOPLE.find(p => p.id === id);
 const pname = id => (person(id) || {}).name || id || '？';
@@ -412,13 +412,14 @@ function aiSettingsModal() {
 /* ===== 更多 ===== */
 function renderMore() {
   const m = me();
-  const allItems = []; T.CHECKLIST.forEach(c => c.items.forEach(i => allItems.push(c.cat + '|' + i))); state.customChecks.forEach(i => allItems.push('✍️ 自己加的|' + i));
-  const mych = m ? (state.checks[m.id] || {}) : (state.checks._anon || {});
-  const done = allItems.filter(k => mych[k]).length;
-  const cats = [...T.CHECKLIST.map(c => ({ cat: c.cat, items: c.items })), ...(state.customChecks.length ? [{ cat: '✍️ 自己加的', items: state.customChecks }] : [])];
-  const ck = cats.map(c => `<details ${c.cat.startsWith('證件') ? 'open' : ''}><summary>${esc(c.cat)} <span class="tiny muted">${c.items.filter(i => mych[c.cat + '|' + i]).length}/${c.items.length}</span></summary><div class="in">${c.items.map(i => { const k = c.cat + '|' + i; return `<div class="ck ${mych[k] ? 'done' : ''}"><input type="checkbox" id="ck-${btoa(unescape(encodeURIComponent(k))).replace(/[^a-z0-9]/gi, '')}" data-act="ck" data-k="${esc(k)}" ${mych[k] ? 'checked' : ''}><label for="ck-${btoa(unescape(encodeURIComponent(k))).replace(/[^a-z0-9]/gi, '')}">${esc(i)}</label></div>`; }).join('')}</div></details>`).join('');
+  const pk = state.me || '_anon'; const hidden = state.hiddenChecks[pk] || {};
+  const cats = [...T.CHECKLIST.map(c => ({ cat: c.cat, items: c.items.filter(i => !hidden[c.cat + '|' + i]) })), ...(state.customChecks.length ? [{ cat: '✍️ 自己加的', items: state.customChecks }] : [])].filter(c => c.items.length);
+  const allItems = []; cats.forEach(c => c.items.forEach(i => allItems.push(c.cat + '|' + i)));
+  const mych = state.checks[pk] || {};
+  const done = allItems.filter(k => mych[k]).length; const hiddenCount = Object.keys(hidden).length;
+  const ck = cats.map(c => `<details ${c.cat.startsWith('證件') ? 'open' : ''}><summary>${esc(c.cat)} <span class="tiny muted">${c.items.filter(i => mych[c.cat + '|' + i]).length}/${c.items.length}</span></summary><div class="in">${c.items.map(i => { const k = c.cat + '|' + i; const hid = 'ck-' + btoa(unescape(encodeURIComponent(k))).replace(/[^a-z0-9]/gi, ''); return `<div class="ck ${mych[k] ? 'done' : ''}" data-k="${esc(k)}"><div class="ck-in"><input type="checkbox" id="${hid}" data-act="ck" data-k="${esc(k)}" ${mych[k] ? 'checked' : ''}><label for="${hid}">${esc(i)}</label></div></div>`; }).join('')}</div></details>`).join('');
   const people = T.PEOPLE.map(p => `<tr><td><span class="badge-g ${p.group}">${T.GROUPS[p.group].short}</span>${p.name}</td><td>房 ${p.room}</td><td>${p.breakfast ? '🍳 含' : '— 不含'}</td><td class="tiny">${p.group === 'yang' ? '10/10 JX822' : '10/13 JX838'}</td></tr>`).join('');
-  return `<div class="card tape tilt-l"><div class="row between"><h2>🧳 行李 Checklist${m ? ` · ${m.name}` : ''}</h2><span class="small muted tab-num">${done}/${allItems.length}</span></div><div class="progress"><i style="width:${allItems.length ? done / allItems.length * 100 : 0}%"></i></div><div class="tiny muted" style="margin-top:4px">每個人的清單分開記；先選「我是誰」。</div>${ck}<div class="row" style="margin-top:8px"><input type="text" id="ckNew" placeholder="自己加一項…" style="flex:1"><button class="btn sm" data-act="ckadd">${ico('plus')}加</button></div></div>
+  return `<div class="card tape tilt-l"><div class="row between"><h2>🧳 行李 Checklist${m ? ` · ${m.name}` : ''}</h2><span class="small muted tab-num">${done}/${allItems.length}</span></div><div class="progress"><i style="width:${allItems.length ? done / allItems.length * 100 : 0}%"></i></div><div class="tiny muted" style="margin-top:4px">每個人的清單分開記；先選「我是誰」。往左滑可以刪掉不需要的項目。${hiddenCount ? ` <button class="btn sm ghost" data-act="ckrestore">還原 ${hiddenCount} 項</button>` : ''}</div>${ck}<div class="row" style="margin-top:8px"><input type="text" id="ckNew" placeholder="自己加一項…" style="flex:1"><button class="btn sm" data-act="ckadd">${ico('plus')}加</button></div></div>
   <div class="card"><h2>👨‍👩‍👧‍👦 11 人名單・房號・航班</h2><div class="tablewrap"><table><thead><tr><th>姓名</th><th>房</th><th>早餐</th><th>去程</th></tr></thead><tbody>${people}</tbody></table></div><div class="tiny muted">分組依出發日：先行組 5 人（10/10）、直飛組 6 人（10/13）。若有誤請告訴家喻。</div><div class="btnrow"><button class="btn sm" data-act="me">切換我是誰</button></div></div>
   <div class="card"><h2>⚙️ 設定</h2>
     <label class="switch"><span>🚗 自駕模式（景點自動顯示停車・加油）</span><input type="checkbox" data-act="toggle-drive" ${state.settings.drive ? 'checked' : ''}></label>
@@ -489,6 +490,8 @@ document.addEventListener('click', async e => {
     case 'aiset': openModal(aiSettingsModal()); break;
     case 'aitest': { toast('測試中…'); try { const fk = $('#aiFamily'); const pw = (fk ? fk.value.trim() : '') || state.settings.familyKey || CFG.FAMILY_PASSWORD; const r = await fetch(CFG.AI_PROXY_URL.replace(/\/$/, ''), { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-family-key': pw }, body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: '回覆：OK' }], max_tokens: 3 }) }); const t = await r.text(); let m = ''; try { m = JSON.parse(t).error?.message || ''; } catch {} toast(r.ok ? '✅ 連線成功，AI 可用' : `❌ ${r.status} ${m || (r.status === 401 ? '家族密碼錯誤' : '')}`); } catch (e) { toast('❌ 連不到中繼站：' + e.message); } break; }
     case 'ck': { const key = state.me || '_anon'; state.checks[key] = state.checks[key] || {}; if (b.checked) state.checks[key][b.dataset.k] = true; else delete state.checks[key][b.dataset.k]; save(); b.closest('.ck').classList.toggle('done', b.checked); break; }
+    case 'ckrestore': { delete state.hiddenChecks[state.me || '_anon']; save(); render(); toast('已還原預設項目'); break; }
+    case 'ckundo': { const k = b.dataset.k; const pk = state.me || '_anon'; if (k.startsWith('✍️ 自己加的|')) { state.customChecks.push(k.split('|').slice(1).join('|')); } else { if (state.hiddenChecks[pk]) delete state.hiddenChecks[pk][k]; } save(); render(); toast('已復原'); break; }
     case 'ckadd': { const el = $('#ckNew'); const v = el.value.trim(); if (!v) break; state.customChecks.push(v); save(); render(); break; }
     case 'export': { const data = JSON.stringify({ expenses: state.expenses, messages: state.messages, checks: state.checks, customChecks: state.customChecks }, null, 1); try { await navigator.clipboard.writeText(data); toast('已複製 JSON 到剪貼簿'); } catch { prompt('資料', data); } break; }
     case 'reload': { if (navigator.serviceWorker) { const rs = await navigator.serviceWorker.getRegistrations(); for (const r of rs) await r.unregister(); } location.reload(true); break; }
@@ -506,6 +509,14 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 $('#btnMe').addEventListener('click', openMe);
+/* 行李清單：往左滑刪除 */
+(() => { let el = null, sx = 0, sy = 0, dx = 0, horiz = null;
+  const removeItem = k => { const pk = state.me || '_anon'; if (k.startsWith('✍️ 自己加的|')) { const name = k.split('|').slice(1).join('|'); state.customChecks = state.customChecks.filter(x => x !== name); } else { state.hiddenChecks[pk] = state.hiddenChecks[pk] || {}; state.hiddenChecks[pk][k] = true; } save(); render();
+    const t = $('#toast'); t.innerHTML = `已刪除 <button class="btn sm" style="margin-left:8px;padding:2px 8px" data-act="ckundo" data-k="${esc(k)}">復原</button>`; t.style.pointerEvents = 'auto'; t.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => { t.classList.remove('show'); t.style.pointerEvents = ''; }, 4000); };
+  document.addEventListener('touchstart', e => { const c = e.target.closest('.ck'); if (!c) return; el = c; sx = e.touches[0].clientX; sy = e.touches[0].clientY; dx = 0; horiz = null; }, { passive: true });
+  document.addEventListener('touchmove', e => { if (!el) return; const x = e.touches[0].clientX - sx, y = e.touches[0].clientY - sy; if (horiz === null && (Math.abs(x) > 8 || Math.abs(y) > 8)) horiz = Math.abs(x) > Math.abs(y); if (!horiz) return; dx = Math.min(0, x); el.classList.add('swiping'); el.querySelector('.ck-in').style.transform = `translateX(${dx}px)`; }, { passive: true });
+  document.addEventListener('touchend', () => { if (!el) return; const c = el, k = c.dataset.k; c.classList.remove('swiping'); const inn = c.querySelector('.ck-in'); if (dx < -90) { inn.style.transform = ''; c.classList.add('gone'); setTimeout(() => removeItem(k), 180); } else { inn.style.transform = ''; } el = null; dx = 0; });
+})();
 $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 function applyTheme() { const v = LS.get('theme', ''); if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme; const s = $('#themeSel'); if (s) s.value = v; }
 
