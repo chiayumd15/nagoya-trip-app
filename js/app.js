@@ -376,15 +376,24 @@ async function askAI(q) {
   const msgs = [{ role: 'system', content: buildContext() }, ...state.aiHistory.slice(-11, -1).filter(x => x.content !== '…思考中')];
   try {
     const r = await fetch(url, { method: 'POST', headers: hdrs, body: JSON.stringify({ model: state.settings.model || 'gpt-4o-mini', messages: msgs, stream: true, temperature: 0.6 }) });
-    if (!r.ok) { const t = await r.text(); if (r.status === 401 && useProxy) { state.settings.familyKey = ''; save(); } throw new Error(`${r.status} ${t.slice(0, 200)}`); }
-    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = '', out = '';
+    if (!r.ok) {
+      const t = await r.text(); let msg = '';
+      try { msg = JSON.parse(t).error?.message || ''; } catch {}
+      if (r.status === 401) { if (useProxy) { state.settings.familyKey = ''; save(); } throw new Error(useProxy ? '家族密碼錯誤，請到「更多 → 設定 → AI 小幫手」重新輸入' : 'API key 無效'); }
+      if (r.status === 403) throw new Error(msg || '這個網址不被允許呼叫 AI，請用正式網址 chiayumd15.github.io 開 app');
+      if (r.status === 429) throw new Error('OpenAI 額度用完或太頻繁，請稍後再試（' + (msg || '429') + '）');
+      throw new Error(`${r.status} ${msg || t.slice(0, 160)}`);
+    }
+    let out = '';
+    if (!r.body || !r.body.getReader) { const j = await r.json(); out = j.choices?.[0]?.message?.content || ''; state.aiHistory[idx].content = out || '（沒有回覆）'; save(); render(); scrollChat(); return; }
+    const reader = r.body.getReader(); const dec = new TextDecoder(); let buf = '';
     while (true) {
       const { value, done } = await reader.read(); if (done) break; buf += dec.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const ln of lines) { const s = ln.trim(); if (!s.startsWith('data:')) continue; const j = s.slice(5).trim(); if (j === '[DONE]') continue; try { const o = JSON.parse(j); const dlt = o.choices?.[0]?.delta?.content; if (dlt) { out += dlt; state.aiHistory[idx].content = out; const el = document.querySelectorAll('#msgs .msg')[idx]; if (el) { el.innerHTML = `<span class="from">🤖 AI 小幫手</span>${mdLite(out)}`; } } } catch {} }
     }
     state.aiHistory[idx].content = out || '（沒有回覆）'; save();
-  } catch (e) { state.aiHistory[idx].content = `❌ 呼叫失敗：${e.message}\n${useProxy ? '請確認家族密碼（更多 → 設定）或網路。' : '請檢查 API key、額度或網路。'}`; save(); render(); }
+  } catch (e) { const net = /Failed to fetch|Load failed|NetworkError/i.test(e.message); state.aiHistory[idx].content = `❌ 呼叫失敗：${net ? '連不到 AI 中繼站，請確認網路（飛航模式？）後再試' : e.message}`; save(); render(); }
   scrollChat();
 }
 function aiReady() { return CFG.AI_PROXY_URL ? !!(state.settings.familyKey || CFG.FAMILY_PASSWORD) : !!(state.settings.openaiKey || CFG.OPENAI_API_KEY); }
@@ -474,6 +483,7 @@ document.addEventListener('click', async e => {
     case 'ai-send': { const el = $('#aiIn'); const q = el.value; el.value = ''; askAI(q); break; }
     case 'ai-clear': if (confirm('清除 AI 對話？')) { state.aiHistory = []; save(); render(); } break;
     case 'aiset': openModal(aiSettingsModal()); break;
+    case 'aitest': { toast('測試中…'); try { const fk = $('#aiFamily'); const pw = (fk ? fk.value.trim() : '') || state.settings.familyKey || CFG.FAMILY_PASSWORD; const r = await fetch(CFG.AI_PROXY_URL.replace(/\/$/, ''), { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-family-key': pw }, body: JSON.stringify({ model: 'gpt-4o-mini', messages: [{ role: 'user', content: '回覆：OK' }], max_tokens: 3 }) }); const t = await r.text(); let m = ''; try { m = JSON.parse(t).error?.message || ''; } catch {} toast(r.ok ? '✅ 連線成功，AI 可用' : `❌ ${r.status} ${m || (r.status === 401 ? '家族密碼錯誤' : '')}`); } catch (e) { toast('❌ 連不到中繼站：' + e.message); } break; }
     case 'ck': { const key = state.me || '_anon'; state.checks[key] = state.checks[key] || {}; if (b.checked) state.checks[key][b.dataset.k] = true; else delete state.checks[key][b.dataset.k]; save(); b.closest('.ck').classList.toggle('done', b.checked); break; }
     case 'ckadd': { const el = $('#ckNew'); const v = el.value.trim(); if (!v) break; state.customChecks.push(v); save(); render(); break; }
     case 'export': { const data = JSON.stringify({ expenses: state.expenses, messages: state.messages, checks: state.checks, customChecks: state.customChecks }, null, 1); try { await navigator.clipboard.writeText(data); toast('已複製 JSON 到剪貼簿'); } catch { prompt('資料', data); } break; }

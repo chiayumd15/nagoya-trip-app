@@ -2,14 +2,16 @@
    環境變數（Settings → Variables and Secrets）：
      OPENAI_API_KEY   (Secret)  你的 OpenAI API key
      FAMILY_PASSWORD  (Secret)  家族密碼，app 會帶在 x-family-key header
-     ALLOWED_ORIGIN   (選填)    只允許某個網址呼叫，例如 https://xxx.netlify.app；不填＝全部允許
+     ALLOWED_ORIGIN   (選填)    允許呼叫的網址，逗號分隔，例如 https://a.github.io,http://127.0.0.1:8765；不填＝全部允許
 */
 const ALLOWED_MODELS = ['gpt-4o-mini', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1', 'gpt-5-mini', 'gpt-5'];
 const MAX_TOKENS = 1200;          // 每次回答上限，控制費用
 const MAX_BODY = 60_000;          // 請求大小上限（字元）
 
+const allowedList = env => (env.ALLOWED_ORIGIN || '').split(',').map(x => x.trim().replace(/\/$/, '')).filter(Boolean);
+const originOk = (env, origin) => { const L = allowedList(env); return !L.length || !origin || L.includes(origin); };
 const cors = (env, origin) => ({
-  'Access-Control-Allow-Origin': env.ALLOWED_ORIGIN || origin || '*',
+  'Access-Control-Allow-Origin': originOk(env, origin) && origin ? origin : (allowedList(env)[0] || '*'),
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, x-family-key',
   'Access-Control-Max-Age': '86400',
@@ -24,7 +26,7 @@ export default {
     if (request.method === 'GET') return new Response(JSON.stringify({ ok: true, service: 'nagoya-trip ai proxy' }), { headers: { ...headers, 'Content-Type': 'application/json' } });
     if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers });
 
-    if (env.ALLOWED_ORIGIN && origin && origin !== env.ALLOWED_ORIGIN) return json({ error: 'origin not allowed' }, 403, headers);
+    if (!originOk(env, origin)) return json({ error: { message: `來源 ${origin} 不在允許名單，請用正式網址開 app` } }, 403, headers);
     const key = request.headers.get('x-family-key') || '';
     if (!env.FAMILY_PASSWORD || key !== env.FAMILY_PASSWORD) return json({ error: { message: '家族密碼錯誤' } }, 401, headers);
     if (!env.OPENAI_API_KEY) return json({ error: { message: 'Worker 尚未設定 OPENAI_API_KEY' } }, 500, headers);
