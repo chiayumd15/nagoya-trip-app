@@ -16,7 +16,7 @@ const LS = {
 };
 const state = {
   tab: LS.get('tab', 'home'), me: LS.get('me', null), day: LS.get('day', null),
-  settings: Object.assign({ drive: false, openaiKey: '', familyKey: '', model: CFG.OPENAI_MODEL || 'gpt-4o-mini', showOther: true }, LS.get('settings', {})),
+  settings: Object.assign({ drive: false, openaiKey: '', familyKey: '', model: CFG.OPENAI_MODEL || 'gpt-4o-mini', showOther: false }, LS.get('settings', {})),
   expenses: LS.get('expenses', []), messages: LS.get('messages', []), aiHistory: LS.get('aiHistory', []),
   checks: LS.get('checks', {}), customChecks: LS.get('customChecks', []),
   rate: LS.get('rate', null), wx: LS.get('wx', {}), guideSec: LS.get('guideSec', 'spots'), chatMode: LS.get('chatMode', 'group'),
@@ -25,6 +25,12 @@ const save = () => { ['tab','me','day','settings','expenses','messages','aiHisto
 const me = () => T.PEOPLE.find(p => p.id === state.me) || null;
 const person = id => T.PEOPLE.find(p => p.id === id);
 const pname = id => (person(id) || {}).name || id || '？';
+const myGroup = () => (me() || {}).group || null;
+const forMe = g => !myGroup() || !g || g === 'all' || g === myGroup();          // 天／航班／項目是否屬於我
+const visibleDays = () => T.DAYS.filter(d => forMe(d.group));
+const KANSAI_AREAS = ['大阪', '京都', '奈良'];
+const spotForMe = sp => !(myGroup() === 'chen' && KANSAI_AREAS.includes(sp.area));
+const textForMe = txt => !(myGroup() === 'chen' && /先行組/.test(txt || ''));
 
 /* ---------- Firebase（選配）---------- */
 let fdb = null, fbReady = false;
@@ -135,9 +141,10 @@ function afterRender() {
   if (state.tab === 'chat') scrollChat();
 }
 function currentDay() {
-  if (state.day) { const d = T.DAYS.find(x => x.id === state.day); if (d) return d; }
-  const t = todayStr(); const hit = T.DAYS.find(d => d.date === t); if (hit) return hit;
-  return T.DAYS.find(d => d.date >= t) || T.DAYS[0];
+  const DS = visibleDays();
+  if (state.day) { const d = DS.find(x => x.id === state.day); if (d) return d; }
+  const t = todayStr(); const hit = DS.find(d => d.date === t); if (hit) return hit;
+  return DS.find(d => d.date >= t) || DS[0];
 }
 
 /* ===== 行程 ===== */
@@ -150,11 +157,12 @@ function renderHome() {
   else if (t <= '2026-10-19') head = `<div class="card tape-r tilt-l"><span class="doodle">🎒</span><h2>旅行第 ${daysBetween('2026-10-10', t) + 1} 天</h2><div class="small muted">今天 ${t}${m ? ` · ${m.name} · ${m.breakfast ? '含早餐' : '不含早餐 → コメダ'}` : ''}</div></div>`;
   else head = `<div class="card tape-r tilt-l"><h2>旅行結束 🎞️</h2><div class="small muted">記得把記帳結清、照片備份、相簿做起來。</div></div>`;
 
-  const chips = T.DAYS.map(x => `<button class="chip ${x.id === d.id ? 'on' : ''} ${x.group === 'yang' ? 'matcha' : ''}" data-act="day" data-id="${x.id}"><div class="hand" style="font-size:1.1rem">${x.date.slice(5).replace('-', '/')}</div><div class="tiny">${x.dow} ${x.hero}</div></button>`).join('');
+  const chips = visibleDays().map(x => `<button class="chip ${x.id === d.id ? 'on' : ''} ${x.group === 'yang' ? 'matcha' : ''}" data-act="day" data-id="${x.id}"><div class="hand" style="font-size:1.1rem">${x.date.slice(5).replace('-', '/')}</div><div class="tiny">${x.dow} ${x.hero}</div></button>`).join('');
 
   const items = d.items.map(it => {
     const other = m && it.group && it.group !== m.group;
     if (other && !state.settings.showOther) return '';
+    if (other) { /* 另一組的移動以淡色顯示 */ }
     const spot = it.spot ? T.SPOTS[it.spot] : null; const rest = it.rest ? T.RESTAURANTS[it.rest] : null;
     const c = spot ? spot.coords : rest ? rest.coords : coordsOf(it.nav);
     const target = it.nav || (it.spot ? 'spot:' + it.spot : it.rest ? 'rest:' + it.rest : null);
@@ -168,17 +176,17 @@ function renderHome() {
   }).join('');
 
   const alt = d.alt ? `<div class="note"><b>🔁 ${esc(d.alt.title)}</b><ul class="clean">${d.alt.items.map(x => `<li>${esc(x)}</li>`).join('')}</ul>${d.alt.spot ? `<button class="btn sm" data-act="spot" data-id="${d.alt.spot}">📍 介紹</button>` : ''}</div>` : '';
-  const flights = T.FLIGHTS.filter(f => f.date === d.date).map(flightCard).join('');
+  const flights = T.FLIGHTS.filter(f => f.date === d.date && forMe(f.group)).map(flightCard).join('');
   return `${head}
   <div class="chips">${chips}</div>
   <div class="card"><div class="hero-day"><div class="big">${d.date.slice(5).replace('-', '/')}</div><div><div class="small muted">星期${d.dow} · ${d.group === 'all' ? '11 人' : T.GROUPS[d.group].name}${d.swapped ? ` · <span class="pill persimmon">已調動</span>` : ''}</div><h2>${esc(d.title)}</h2>${d.swapped ? `<div class="tiny muted">${esc(d.swapped)}</div>` : ''}</div></div>
-    ${m && d.items.some(i => i.group) ? `<label class="switch small"><span>顯示另一家的行程</span><input type="checkbox" data-act="toggle-other" ${state.settings.showOther ? 'checked' : ''}></label>` : ''}
+    ${m && d.items.some(i => i.group) ? `<label class="switch small"><span>顯示另一組今天的移動</span><input type="checkbox" data-act="toggle-other" ${state.settings.showOther ? 'checked' : ''}></label>` : ''}
     <ul class="timeline">${items}</ul>${alt}</div>
   <div id="wxSlot">${wxCardHTML(d.wx, d.date, (state.wx[d.wx] || {}).data)}</div>
   ${flights}
   <div class="card tape"><h2>☔ 雨備行程</h2><ul class="clean">${d.rain.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>
   ${d.notes && d.notes.length ? `<div class="card"><h2>📝 今日備忘</h2><ul class="clean">${d.notes.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` : ''}
-  <div class="card tilt-r"><h2>🏨 今晚住宿</h2>${d.date < '2026-10-13' ? `<div>大阪飯店（待訂）— 推薦見「更多 → 住宿」</div>` : d.date === '2026-10-19' ? '<div>飛機上 → 回家 🏠</div>' : `<div><b>${esc(T.HOTEL.name)}</b> <span class="small muted">${esc(T.HOTEL.jp)}</span></div><div class="small muted">${esc(T.HOTEL.addr)}</div><div class="btnrow">${navBtn('hotel', '導航回飯店')}<a class="btn sm" href="tel:${T.HOTEL.tel}">📞 ${T.HOTEL.tel}</a>${m ? `<span class="chip mini">房 ${m.room} · ${m.breakfast ? '含早餐' : '不含早餐'}</span>` : ''}</div>`}</div>
+  <div class="card tilt-r"><h2>🏨 今晚住宿</h2>${d.date < '2026-10-13' ? `<div>大阪飯店（待訂）— 推薦見「指南 → 住宿」</div>` : d.date === '2026-10-19' ? '<div>飛機上 → 回家 🏠</div>' : `<div><b>${esc(T.HOTEL.name)}</b> <span class="small muted">${esc(T.HOTEL.jp)}</span></div><div class="small muted">${esc(T.HOTEL.addr)}</div><div class="btnrow">${navBtn('hotel', '導航回飯店')}<a class="btn sm" href="tel:${T.HOTEL.tel}">📞 ${T.HOTEL.tel}</a>${m ? `<span class="chip mini">房 ${m.room} · ${m.breakfast ? '含早餐' : '不含早餐'}</span>` : ''}</div>`}</div>
   <div class="card"><div class="row between"><h2>💴 匯率</h2><span class="small muted" id="rateLine">${rateLine()}</span></div><div class="row"><input type="number" inputmode="decimal" id="qJPY" placeholder="日圓" style="flex:1"><span>→</span><output id="qTWD" class="money-big">NT$0</output></div></div>
   ${state.settings.drive ? `<div class="card"><h2>🚗 自駕模式</h2><div class="small muted">每個景點下方已自動顯示停車場與加油站。也可以用目前位置搜尋：</div><div class="btnrow"><button class="btn sm" data-act="near" data-q="駐車場">🅿️ 我附近停車場</button><button class="btn sm" data-act="near" data-q="ガソリンスタンド">⛽ 我附近加油站</button></div></div>` : ''}`;
 }
@@ -198,7 +206,7 @@ function renderGuide() {
 const areaOrder = ['名古屋','榮','伏見','熱田','大須','長久手','犬山','長野','常滑','名古屋站北','金城埠頭','大阪','京都','奈良'];
 function guideSpots() {
   const groups = {};
-  Object.entries(T.SPOTS).forEach(([id, s]) => { if (!s.intro) return; (groups[s.area] = groups[s.area] || []).push([id, s]); });
+  Object.entries(T.SPOTS).forEach(([id, s]) => { if (!s.intro || !spotForMe(s)) return; (groups[s.area] = groups[s.area] || []).push([id, s]); });
   const order = Object.keys(groups).sort((a, b) => (areaOrder.indexOf(a) + 99) % 99 - (areaOrder.indexOf(b) + 99) % 99);
   return order.map(a => `<h3 class="hand" style="font-size:1.4rem;margin:14px 0 4px">${esc(a)}</h3>` + groups[a].map(([id, s]) => `<div class="card"><div class="row between"><h2>${esc(s.name)}</h2><span class="small muted">${esc(s.jp)}</span></div><div class="small">${esc(s.intro)}</div>${s.cost ? `<div class="tiny muted" style="margin-top:4px">💴 ${esc(s.cost)}${s.hours ? ` · 🕒 ${esc(s.hours)}` : ''}</div>` : ''}<div class="btnrow"><button class="btn sm" data-act="spot" data-id="${id}">看攻略・拍照點</button>${navBtn('spot:' + id)}${driveBtns(s.coords)}</div></div>`).join('')).join('');
 }
@@ -223,16 +231,16 @@ function restModal(id) {
   <div class="btnrow">${navBtn('rest:' + id, 'Google Maps 導航')}<a class="btn sm" target="_blank" rel="noopener" href="${searchUrl(r.q || r.jp || r.name, r.coords, 15)}">🔍 地圖搜尋</a><button class="btn sm" data-act="addexp" data-title="${esc(r.name)}">💴 記一筆</button><button class="btn sm" data-act="ask" data-q="${esc(r.name)} 11 個人去要怎麼預約？有什麼必點？如果訂不到有什麼備案？">🤖 問 AI</button></div>`;
 }
 function guideMust() {
-  const sec = (title, arr, cols) => `<div class="card tape"><h2>${title}</h2><div class="tablewrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${arr.map(x => `<tr>${Object.values(x).map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
+  const sec = (title, arr, cols) => `<div class="card tape"><h2>${title}</h2><div class="tablewrap"><table><thead><tr>${cols.map(c => `<th>${c}</th>`).join('')}</tr></thead><tbody>${arr.filter(x => textForMe(Object.values(x).join(' '))).map(x => `<tr>${Object.values(x).map(v => `<td>${esc(v)}</td>`).join('')}</tr>`).join('')}</tbody></table></div></div>`;
   return sec('🍜 必吃', T.MUST.eat, ['名物', '哪裡吃', '哪天']) + sec('🛍 必買', T.MUST.buy, ['伴手禮', '哪裡買', '備註']) + sec('📸 必拍', T.MUST.shoot, ['畫面', '時機', '技巧']);
 }
 function guidePhoto() {
   return `<div class="card tape"><h2>📸 拍照通用技巧</h2><ul class="clean">${T.PHOTO_TIPS.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div>` +
-    Object.entries(T.SPOTS).filter(([, s]) => s.photo && s.photo.length).map(([id, s]) => `<details><summary>${esc(s.name)}</summary><div class="in"><ul class="clean">${s.photo.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></details>`).join('');
+    Object.entries(T.SPOTS).filter(([, s]) => s.photo && s.photo.length && spotForMe(s)).map(([id, s]) => `<details><summary>${esc(s.name)}</summary><div class="in"><ul class="clean">${s.photo.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></details>`).join('');
 }
 function guideTransport() {
   return T.TRANSPORT.map(x => `<div class="card"><h2>${esc(x.title)}</h2><div class="small">${esc(x.body)}</div></div>`).join('') +
-    `<div class="card tilt-r"><h2>🛫 航班</h2></div>` + T.FLIGHTS.map(flightCard).join('') +
+    `<div class="card tilt-r"><h2>🛫 航班</h2></div>` + T.FLIGHTS.filter(f => forMe(f.group)).map(flightCard).join('') +
     `<div class="card"><h2>🚗 自駕模式</h2><label class="switch"><span>開啟後每個景點自動顯示 停車場／加油站</span><input type="checkbox" data-act="toggle-drive" ${state.settings.drive ? 'checked' : ''}></label><div class="small muted">日本加油：自助（セルフ）選「レギュラー」＝ 92 無鉛；ENEOS／apollostation／コスモ 最多；約 ¥170–180/L；還車前加滿並保留收據。停車場多為「投幣式 コインパーキング」，看板上「最大料金」是當日上限。</div></div>`;
 }
 function guideHotel() {
@@ -247,16 +255,16 @@ function guideHotel() {
     <h3 style="margin-top:10px">每人 6 晚合計</h3><ul class="clean small"><li>豪華雙床／雙人房 含早餐：<b>${fmtJPY(H.perPersonPrice.twinBf)}</b>/人（8 人）</li><li>豪華雙床房 不含早餐：<b>${fmtJPY(H.perPersonPrice.twinRoomOnly)}</b>/人（高魁澤、陳玟潔）</li><li>標準雙人房 單人入住 含早餐：<b>${fmtJPY(H.perPersonPrice.singleBf)}</b>（楊書竣）</li></ul>
     <details><summary>每晚單價（每人）</summary><div class="in tablewrap"><table><thead><tr><th>日期</th><th>雙床含早</th><th>雙床不含早</th><th>單人房</th></tr></thead><tbody>${nightly}</tbody></table></div></details>
     <div class="btnrow"><button class="btn sm primary" data-act="addhotel">把住宿費一鍵加入分帳</button></div></div>
-  <div class="card tilt-l"><h2>🛌 大阪 3 晚（先行組 10/10–10/13，待訂）</h2><div class="small muted">建議住難波／心齋橋：去關西機場（南海 Rapi:t）、去新大阪（御堂筋線 15 分）、逛道頓堀都方便。</div>${T.OSAKA_HOTEL_PICKS.map(h => `<div class="note"><b>${esc(h.name)}</b> <span class="tiny muted">${esc(h.area)}</span><div class="small">${esc(h.why)}</div><a class="btn sm ghost" target="_blank" rel="noopener" href="${searchUrl(h.q)}">🗺 地圖</a></div>`).join('')}</div>`;
+  ${myGroup() === 'chen' ? '' : `<div class="card tilt-l"><h2>🛌 大阪 3 晚（先行組 10/10–10/13，待訂）</h2><div class="small muted">建議住難波／心齋橋：去關西機場（南海 Rapi:t）、去新大阪（御堂筋線 15 分）、逛道頓堀都方便。</div>${T.OSAKA_HOTEL_PICKS.map(h => `<div class="note"><b>${esc(h.name)}</b> <span class="tiny muted">${esc(h.area)}</span><div class="small">${esc(h.why)}</div><a class="btn sm ghost" target="_blank" rel="noopener" href="${searchUrl(h.q)}">🗺 地圖</a></div>`).join('')}</div>`}`;
 }
 function guideWeather() {
-  const keys = ['osaka', 'kyoto', 'nagoya', 'nagakute', 'kamikochi', 'inuyama'];
+  const keys = ['osaka', 'kyoto', 'nagoya', 'nagakute', 'kamikochi', 'inuyama'].filter(k => !(myGroup() === 'chen' && ['osaka', 'kyoto'].includes(k)));
   setTimeout(() => keys.forEach(k => fetchWx(k).then(data => { const el = document.getElementById('wx-' + k); if (el) el.innerHTML = wxCardHTML(k, wxDateFor(k), data); })), 0);
   return `<div class="sticky-note">10 月中旬：名古屋白天 22°C 舒服、早晚 15°C；上高地只有 3–12°C，差 10 度！颱風尾季，出發前 5 天每天看。</div>` + keys.map(k => `<div id="wx-${k}">${wxCardHTML(k, wxDateFor(k), (state.wx[k] || {}).data)}</div>`).join('');
 }
 const wxDateFor = k => (T.DAYS.find(d => d.wx === k) || {}).date || '2026-10-14';
 function guideRain() {
-  return `<div class="sticky-note">每天的雨備也在「行程」頁該天下方。這裡是室內景點總表，隨時可替換。</div>` + T.DAYS.map(d => `<details><summary>${d.date.slice(5).replace('-', '/')}（${d.dow}）${esc(d.title)}</summary><div class="in"><ul class="clean">${d.rain.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></details>`).join('') +
+  return `<div class="sticky-note">每天的雨備也在「行程」頁該天下方。這裡是室內景點總表，隨時可替換。</div>` + visibleDays().map(d => `<details><summary>${d.date.slice(5).replace('-', '/')}（${d.dow}）${esc(d.title)}</summary><div class="in"><ul class="clean">${d.rain.map(x => `<li>${esc(x)}</li>`).join('')}</ul></div></details>`).join('') +
     `<div class="card tape"><h2>🏛 室內景點清單</h2>${['science', 'toyota', 'linear', 'noritake'].map(id => { const s = T.SPOTS[id]; return `<div class="note"><b>${esc(s.name)}</b><div class="small">${esc(s.intro)}</div><div class="tiny muted">${esc(s.hours)} · ${esc(s.cost)}</div><div class="btnrow"><button class="btn sm" data-act="spot" data-id="${id}">介紹</button>${navBtn('spot:' + id)}</div></div>`; }).join('')}<div class="small muted">還有：榮地下街（サカエチカ・森の地下街）、松坂屋／三越／LACHIC、イオンモール、飯店溫泉。</div></div>`;
 }
 function guideNews() {
@@ -418,7 +426,7 @@ function openModal(html) { $('#modalBody').innerHTML = html; $('#modal').hidden 
 function closeModal() { $('#modal').hidden = true; document.body.style.overflow = ''; }
 let toastT; function toast(s) { const el = $('#toast'); el.textContent = s; el.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2200); }
 function openMe() {
-  openModal(`<h2>你是誰？</h2><div class="small muted">選了之後，行程、早餐、房號、記帳、聊天都會用你的身分。</div><h3 style="margin-top:10px">先行組（10/10 出發）</h3><div class="people-grid">${T.PEOPLE.filter(p => p.group === 'yang').map(p => `<button class="pbtn yang ${state.me === p.id ? 'on' : ''}" data-act="setme" data-id="${p.id}">${p.name}</button>`).join('')}</div><h3 style="margin-top:10px">直飛組（10/13 出發）</h3><div class="people-grid">${T.PEOPLE.filter(p => p.group === 'chen').map(p => `<button class="pbtn chen ${state.me === p.id ? 'on' : ''}" data-act="setme" data-id="${p.id}">${p.name}</button>`).join('')}</div>`);
+  openModal(`<h2>你是誰？</h2><div class="small muted">選了之後，只會顯示你這組的行程；早餐、房號、記帳、聊天也會用你的身分。</div><h3 style="margin-top:10px">先行組（10/10 出發）</h3><div class="people-grid">${T.PEOPLE.filter(p => p.group === 'yang').map(p => `<button class="pbtn yang ${state.me === p.id ? 'on' : ''}" data-act="setme" data-id="${p.id}">${p.name}</button>`).join('')}</div><h3 style="margin-top:10px">直飛組（10/13 出發）</h3><div class="people-grid">${T.PEOPLE.filter(p => p.group === 'chen').map(p => `<button class="pbtn chen ${state.me === p.id ? 'on' : ''}" data-act="setme" data-id="${p.id}">${p.name}</button>`).join('')}</div>`);
 }
 
 /* ===== 事件 ===== */
@@ -444,7 +452,7 @@ document.addEventListener('click', async e => {
     case 'spot': openModal(spotModal(id)); break;
     case 'rest': openModal(restModal(id)); break;
     case 'me': openMe(); break;
-    case 'setme': state.me = id; save(); closeModal(); render(); toast(`你好，${pname(id)}！`); break;
+    case 'setme': state.me = id; if (state.day && !visibleDays().some(d => d.id === state.day)) state.day = null; save(); closeModal(); render(); toast(`你好，${pname(id)}！`); break;
     case 'wx-refresh': toast('更新天氣…'); fetchWx(b.dataset.key, true).then(() => render()); break;
     case 'rate-refresh': toast('更新匯率…'); fetchRate(true).then(() => { render(); toast('匯率已更新'); }); break;
     case 'toggle-other': state.settings.showOther = b.checked; save(); render(); break;
@@ -488,7 +496,8 @@ $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeM
 function applyTheme() { const v = LS.get('theme', ''); if (v) document.documentElement.dataset.theme = v; else delete document.documentElement.dataset.theme; const s = $('#themeSel'); if (s) s.value = v; }
 
 /* ===== 啟動 ===== */
-{ const h=(location.hash||'').replace('#',''); const [ht,hs]=h.split('/'); if(['home','guide','money','chat','more'].includes(ht)){ state.tab=ht; if(ht==='guide'&&hs) state.guideSec=hs; if(ht==='chat'&&hs) state.chatMode=hs; if(ht==='home'&&hs) state.day=hs; } }
+{ try { const q = new URLSearchParams(location.search).get('me'); if (q && person(q)) { state.me = q; save(); history.replaceState(null, '', location.pathname + location.hash); } } catch {}
+  const h=(location.hash||'').replace('#',''); const [ht,hs]=h.split('/'); if(['home','guide','money','chat','more'].includes(ht)){ state.tab=ht; if(ht==='guide'&&hs) state.guideSec=hs; if(ht==='chat'&&hs) state.chatMode=hs; if(ht==='home'&&hs) state.day=hs; } }
 applyTheme(); render();
 if (!state.me) setTimeout(openMe, 600);
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
