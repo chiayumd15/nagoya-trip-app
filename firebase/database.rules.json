@@ -3,7 +3,7 @@
     "trips": {
       "nagoya2026": {
         ".read": true,
-        ".write": "now < 1761955200000",
+        ".write": "now < 1793491200000",
         "expenses": { "$id": { ".validate": "newData.hasChildren(['id','ts','title','amount','payer','split'])" } },
         "messages": { "$id": { ".validate": "newData.hasChildren(['id','ts','from','text']) && newData.child('text').val().length < 2000" } }
       }
