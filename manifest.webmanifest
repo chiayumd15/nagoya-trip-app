@@ -1,0 +1,16 @@
+{
+  "name": "名古屋・上高地 兩家旅",
+  "short_name": "兩家旅",
+  "description": "2026/10/10–10/19 楊家＋姑姑家 11 人 名古屋・關西・上高地 旅遊手帳",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF5E9",
+  "theme_color": "#FBF5E9",
+  "lang": "zh-TW",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
