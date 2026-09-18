@@ -295,29 +295,30 @@ function settle(bal) {
 function renderMoney() {
   const m = me(); const bal = balances(); const total = state.expenses.reduce((s, e) => s + toJPY(e), 0);
   const mine = m ? state.expenses.filter(e => e.split.includes(m.id)).reduce((s, e) => s + toJPY(e) / e.split.length, 0) : 0;
-  const list = state.expenses.slice().reverse().map(e => `<div class="exp"><div><b>${esc(e.title)}</b> <span class="tiny muted">${esc(e.cat || '')}</span><div class="tiny muted">${e.date} · ${pname(e.payer)} 付 · ${e.split.length === 11 ? '11 人均分' : e.split.length + ' 人：' + e.split.map(pname).join('、')}</div></div><div><div class="amt">${e.currency === 'TWD' ? fmtTWD(e.amount) : fmtJPY(e.amount)}</div><div class="tiny muted">${e.currency === 'TWD' ? fmtJPY(toJPY(e)) : '≈ ' + fmtTWD(e.amount * (e.rate || rate()))}</div><button class="btn sm ghost" data-act="delexp" data-id="${e.id}">刪</button></div></div>`).join('') || '<div class="muted small">還沒有帳。按「＋ 記一筆」開始。</div>';
-  const sums = T.PEOPLE.map(p => `<div class="bal ${bal[p.id] > 1 ? 'pos' : bal[p.id] < -1 ? 'neg' : ''}"><span><span class="badge-g ${p.group}">${T.GROUPS[p.group].short}</span>${p.name}</span><span>${bal[p.id] > 1 ? '應收 ' : bal[p.id] < -1 ? '應付 ' : ''}${fmtJPY(Math.abs(bal[p.id]))}</span></div>`).join('');
+  const list = state.expenses.slice().reverse().map(e => `<div class="exp"><div><b>${esc(e.title)}</b> <span class="tiny muted">${esc(e.cat || '')}</span><div class="tiny muted">${e.date} · ${pname(e.payer)} 付 · ${e.split.length === 11 ? '11 人均分' : e.split.length + ' 人：' + e.split.map(pname).join('、')}</div></div><div><div class="amt">${e.currency === 'TWD' ? fmtTWD(e.amount) : fmtJPY(e.amount)}</div><div class="tiny muted">${e.currency === 'TWD' ? fmtJPY(toJPY(e)) : '≈ ' + fmtTWD(e.amount * (e.rate || rate()))}</div><button class="btn sm" data-act="editexp" data-id="${e.id}">改</button> <button class="btn sm ghost" data-act="delexp" data-id="${e.id}">刪</button></div></div>`).join('') || '<div class="muted small">還沒有帳。按「＋ 記一筆」開始。</div>';
+  const sums = T.PEOPLE.map(p => `<div class="bal ${bal[p.id] > 1 ? 'pos' : bal[p.id] < -1 ? 'neg' : ''}"><span>${p.name}</span><span>${bal[p.id] > 1 ? '應收 ' : bal[p.id] < -1 ? '應付 ' : ''}${fmtJPY(Math.abs(bal[p.id]))}</span></div>`).join('');
   const st = settle(bal).map(s => `<li>${pname(s.from)} → ${pname(s.to)}：<b>${fmtJPY(s.v)}</b> <span class="tiny muted">≈ ${fmtTWD(s.v * rate())}</span></li>`).join('') || '<li class="muted">目前不用轉帳 🎉</li>';
   const byGroup = { yang: 0, chen: 0 }; state.expenses.forEach(e => { const per = toJPY(e) / e.split.length; e.split.forEach(id => { const p = person(id); if (p) byGroup[p.group] += per; }); });
   return `<div class="card tape-r tilt-l"><div class="row between"><h2>💴 匯率・記帳</h2><span class="tiny ${fbReady ? 'pill good' : 'pill warn'}">${fbReady ? '11 人即時同步' : '只存這支手機'}</span></div><div class="small muted" id="rateLine">${rateLine()}</div>
     <div class="row" style="margin-top:8px"><input type="number" inputmode="decimal" id="qJPY" placeholder="日圓 → 台幣" style="flex:1"><output id="qTWD" class="money-big">NT$0</output></div>
     <div class="row" style="margin-top:4px"><input type="number" inputmode="decimal" id="qTWDin" placeholder="台幣 → 日圓" style="flex:1"><output id="qJPYout" class="money-big">¥0</output></div>
     <div class="btnrow"><button class="btn sm ghost" data-act="rate-refresh">${ico('refresh')}更新匯率</button></div></div>
-  <div class="card"><div class="row between"><div><div class="small muted">總花費</div><div class="money-big">${fmtJPY(total)}</div><div class="tiny muted">≈ ${fmtTWD(total * rate())} · 先行組 ${fmtJPY(byGroup.yang)} / 直飛組 ${fmtJPY(byGroup.chen)}</div></div>${m ? `<div style="text-align:right"><div class="small muted">${m.name} 的份</div><div class="money-big">${fmtJPY(mine)}</div><div class="tiny muted">≈ ${fmtTWD(mine * rate())}</div></div>` : ''}</div>
+  <div class="card"><div class="row between"><div><div class="small muted">總花費</div><div class="money-big">${fmtJPY(total)}</div><div class="tiny muted">≈ ${fmtTWD(total * rate())}</div></div>${m ? `<div style="text-align:right"><div class="small muted">${m.name} 的份</div><div class="money-big">${fmtJPY(mine)}</div><div class="tiny muted">≈ ${fmtTWD(mine * rate())}</div></div>` : ''}</div>
     <div class="btnrow"><button class="btn primary" data-act="addexp">${ico('plus')}記一筆</button><button class="btn" data-act="quick" data-title="午餐" data-cat="🍜 餐飲">🍜 午餐</button><button class="btn" data-act="quick" data-title="晚餐" data-cat="🍜 餐飲">🍱 晚餐</button><button class="btn" data-act="quick" data-title="交通" data-cat="🚇 交通">🚇 交通</button><button class="btn" data-act="quick" data-title="門票" data-cat="🎫 門票">🎫 門票</button></div></div>
   <div class="card"><h2>🧮 誰欠誰（最少轉帳次數）</h2><ul class="clean">${st}</ul><details><summary>每人餘額</summary><div class="in">${sums}</div></details></div>
   <div class="card"><div class="row between"><h2>🧾 明細（${state.expenses.length} 筆）</h2><button class="btn sm ghost" data-act="copyexp">複製成文字</button></div>${list}</div>
   ${!fbReady ? `<div class="sticky-note small">想讓 11 支手機同步記帳與聊天：請家喻在 js/config.js 填入 Firebase 設定（免費，5 分鐘），見「更多 → 設定」說明。</div>` : ''}`;
 }
 function addExpModal(pre = {}) {
-  const m = me(); const people = T.PEOPLE.map(p => `<button type="button" class="pbtn ${p.group} on" data-pid="${p.id}">${p.name}</button>`).join('');
-  return `<h2>💴 記一筆</h2>
+  const m = me(); const splitSet = pre.split ? new Set(pre.split) : null;
+  const people = T.PEOPLE.map(p => `<button type="button" class="pbtn ${p.group} ${!splitSet || splitSet.has(p.id) ? 'on' : ''}" data-pid="${p.id}">${p.name}</button>`).join('');
+  return `<h2>💴 ${pre.id ? '修改這筆' : '記一筆'}</h2>${pre.id ? `<input type="hidden" id="exId" value="${esc(pre.id)}">` : ''}
   <label class="lbl">項目</label><input type="text" id="exTitle" value="${esc(pre.title || '')}" placeholder="例：馬喰一代 飛驒牛晚餐">
-  <div class="row"><div style="flex:1"><label class="lbl">金額</label><input type="number" inputmode="decimal" id="exAmt" value="${pre.amount || ''}" placeholder="0"></div><div style="width:110px"><label class="lbl">幣別</label><select id="exCur"><option value="JPY">JPY ¥</option><option value="TWD">TWD NT$</option></select></div></div>
-  <div class="row"><div style="flex:1"><label class="lbl">誰付的</label><select id="exPayer">${T.PEOPLE.map(p => `<option value="${p.id}" ${m && m.id === p.id ? 'selected' : ''}>${p.name}</option>`).join('')}</select></div><div style="flex:1"><label class="lbl">類別</label><select id="exCat">${['🍜 餐飲', '🚇 交通', '🎫 門票', '🏨 住宿', '🛍 購物', '🎁 伴手禮', '📦 其他'].map(c => `<option ${pre.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div></div>
+  <div class="row"><div style="flex:1"><label class="lbl">金額</label><input type="number" inputmode="decimal" id="exAmt" value="${pre.amount || ''}" placeholder="0"></div><div style="width:110px"><label class="lbl">幣別</label><select id="exCur"><option value="JPY" ${pre.currency === 'JPY' ? 'selected' : ''}>JPY ¥</option><option value="TWD" ${pre.currency === 'TWD' ? 'selected' : ''}>TWD NT$</option></select></div></div>
+  <div class="row"><div style="flex:1"><label class="lbl">誰付的</label><select id="exPayer">${T.PEOPLE.map(p => `<option value="${p.id}" ${(pre.payer ? pre.payer === p.id : (m && m.id === p.id)) ? 'selected' : ''}>${p.name}</option>`).join('')}</select></div><div style="flex:1"><label class="lbl">類別</label><select id="exCat">${['🍜 餐飲', '🚇 交通', '🎫 門票', '🏨 住宿', '🛍 購物', '🎁 伴手禮', '📦 其他'].map(c => `<option ${pre.cat === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div></div>
   <label class="lbl">日期</label><input type="date" id="exDate" value="${pre.date || (todayStr() >= '2026-10-10' && todayStr() <= '2026-10-19' ? todayStr() : currentDay().date)}">
-  <label class="lbl">分給誰（點選切換）</label><div class="btnrow" style="margin:0 0 6px"><button type="button" class="btn sm" data-sel="all">全部 11 人</button><button type="button" class="btn sm" data-sel="yang">只有先行組</button><button type="button" class="btn sm" data-sel="chen">只有直飛組</button><button type="button" class="btn sm ghost" data-sel="none">清空</button></div><div class="people-grid" id="exPeople">${people}</div>
-  <div class="btnrow" style="margin-top:14px"><button class="btn primary block" id="exSave">儲存</button></div>`;
+  <label class="lbl">分給誰（點選切換）</label><div class="btnrow" style="margin:0 0 6px"><button type="button" class="btn sm" data-sel="all">全部 11 人</button><button type="button" class="btn sm" data-sel="yang">10/10 出發的 5 人</button><button type="button" class="btn sm" data-sel="chen">10/13 出發的 6 人</button><button type="button" class="btn sm ghost" data-sel="none">清空</button></div><div class="people-grid" id="exPeople">${people}</div>
+  <div class="btnrow" style="margin-top:14px"><button class="btn primary block" id="exSave">${pre.id ? '儲存修改' : '儲存'}</button></div>`;
 }
 
 /* ===== 聊天 / AI ===== */
@@ -449,9 +450,11 @@ document.addEventListener('click', async e => {
   if (b.id === 'exSave') {
     const amt = parseFloat($('#exAmt').value); if (!amt) { toast('請輸入金額'); return; }
     const split = [...document.querySelectorAll('#exPeople .pbtn.on')].map(x => x.dataset.pid); if (!split.length) { toast('至少選一個人分'); return; }
-    const ex = { id: uid(), ts: Date.now(), title: $('#exTitle').value.trim() || '未命名', amount: amt, currency: $('#exCur').value, payer: $('#exPayer').value, cat: $('#exCat').value, date: $('#exDate').value, split, rate: rate(), by: state.me };
-    if (fbReady) await fref('expenses').child(ex.id).set(ex); else { state.expenses.push(ex); save(); }
-    closeModal(); state.tab = 'money'; render(); toast('已記一筆 ✓'); return;
+    const exIdEl = $('#exId'); const old = exIdEl ? state.expenses.find(x => x.id === exIdEl.value) : null;
+    const ex = { id: old ? old.id : uid(), ts: old ? old.ts : Date.now(), title: $('#exTitle').value.trim() || '未命名', amount: amt, currency: $('#exCur').value, payer: $('#exPayer').value, cat: $('#exCat').value, date: $('#exDate').value, split, rate: old && old.currency === $('#exCur').value ? old.rate : rate(), by: state.me, editedTs: old ? Date.now() : undefined };
+    if (ex.editedTs === undefined) delete ex.editedTs;
+    if (fbReady) await fref('expenses').child(ex.id).set(ex); else { if (old) state.expenses = state.expenses.map(x => x.id === ex.id ? ex : x); else state.expenses.push(ex); save(); }
+    closeModal(); state.tab = 'money'; render(); toast(old ? '已修改 ✓' : '已記一筆 ✓'); return;
   }
   if (b.id === 'aiKeySave') { const fk = $('#aiFamily'), ak = $('#aiKey'); if (fk) state.settings.familyKey = fk.value.trim(); if (ak) state.settings.openaiKey = ak.value.trim(); state.settings.model = $('#aiModel').value; save(); closeModal(); render(); toast('已儲存'); return; }
   const a = b.dataset.act, id = b.dataset.id;
@@ -472,6 +475,7 @@ document.addEventListener('click', async e => {
     case 'addhotel': { const H = T.HOTEL; const rows = [['住宿 6 晚（雙床/雙人 含早餐）', H.perPersonPrice.twinBf, T.PEOPLE.filter(p => p.breakfast && p.room !== 1).map(p => p.id)], ['住宿 6 晚（不含早餐）', H.perPersonPrice.twinRoomOnly, T.PEOPLE.filter(p => !p.breakfast).map(p => p.id)], ['住宿 6 晚（單人房 含早餐）', H.perPersonPrice.singleBf, ['ysj']]];
       const payer = state.me || 'gkz'; for (const [title, per, ids] of rows) { const ex = { id: uid(), ts: Date.now(), title, amount: per * ids.length, currency: 'JPY', payer, cat: '🏨 住宿', date: '2026-10-13', split: ids, rate: rate(), by: state.me }; if (fbReady) await fref('expenses').child(ex.id).set(ex); else state.expenses.push(ex); }
       save(); state.tab = 'money'; render(); toast('已加入 3 筆住宿費（付款人＝' + pname(payer) + '，可再編輯）'); break; }
+    case 'editexp': { const ex = state.expenses.find(x => x.id === id); if (ex) openModal(addExpModal(ex)); break; }
     case 'delexp': if (confirm('刪除這筆？')) { if (fbReady) await fref('expenses').child(id).remove(); else { state.expenses = state.expenses.filter(x => x.id !== id); save(); } render(); } break;
     case 'copyexp': { const txt = state.expenses.map(e => `${e.date} ${e.title} ${e.currency === 'TWD' ? 'NT$' : '¥'}${e.amount} 付:${pname(e.payer)} 分:${e.split.map(pname).join('/')}`).join('\n') + '\n\n' + settle(balances()).map(s => `${pname(s.from)} → ${pname(s.to)} ${fmtJPY(s.v)}`).join('\n'); try { await navigator.clipboard.writeText(txt); toast('已複製，可貼到 LINE'); } catch { prompt('複製以下文字', txt); } break; }
     case 'chatmode': state.chatMode = id; save(); render(); break;
