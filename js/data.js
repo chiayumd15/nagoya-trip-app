@@ -3,11 +3,15 @@
 window.TRIP = (() => {
 
 const PEOPLE = [
-  { id:'ycg', name:'楊才廣', group:'yang', room:5, breakfast:true },
-  { id:'hst', name:'黃思婷', group:'yang', room:5, breakfast:true },
-  { id:'ycy', name:'楊家喻', group:'yang', room:6, breakfast:true },
-  { id:'zzy', name:'張志郁', group:'yang', room:6, breakfast:true },
-  { id:'ysj', name:'楊書竣', group:'yang', room:1, breakfast:true },
+  { id:'ycg', name:'楊才廣', group:'yang', room:5, breakfast:true, seat:'57E', eticket:'1892106471951',
+    esim:{"plan": "Docomo 原生線路 每天 2GB 降速 10 天", "expires": "2026-11-06", "iccid": "89812003919132115211", "order": "261004Q0BH9W1F", "smdp": "rsp.billionconnect.com", "code": "D1ADC47C39B9402695D5CEECA2E55875", "apn": "vmobile.jp"} },
+  { id:'hst', name:'黃思婷', group:'yang', room:5, breakfast:true, seat:'57G', eticket:'1892106471952',
+    esim:{"plan": "Docomo 原生線路 每天 2GB 降速 10 天", "expires": "2026-11-06", "iccid": "89812003919132115212", "order": "261004Q0BH9W1F", "smdp": "rsp.billionconnect.com", "code": "104CF51473DB47C5920D6B81D4CCED54", "apn": "vmobile.jp"} },
+  { id:'ycy', name:'楊家喻', group:'yang', room:6, breakfast:true, seat:'51E', eticket:'1892106471057',
+    esim:{"plan": "KDDI 原裝 5G 吃到飽不降速 10 天", "expires": "2026-11-06", "iccid": "89813000254037155990", "order": "261004Q0EW42NS", "smdp": "kddi.prod.ondemandconnectivity.com", "code": "QLO6WAB4C77MND1J03CW020KXU4PYMLN", "apn": "uad5gn.au-net.ne.jp", "apnUser": "au@uad5gn.au-net.ne.jp", "apnPass": "au"} },
+  { id:'zzy', name:'張志郁', group:'yang', room:6, breakfast:true, seat:'51G', eticket:'1892106471056',
+    esim:{"plan": "Docomo 原生線路 共 20GB 降速 10 天", "expires": "2026-11-06", "iccid": "89812003919132115311", "order": "261004Q0EW42NS", "smdp": "rsp.billionconnect.com", "code": "EB19C0E59AAF47F09B85073843F51BDD", "apn": "vmobile.jp"} },
+  { id:'ysj', name:'楊書竣', group:'yang', room:1, breakfast:true, seat:'57D', eticket:'' },
   { id:'cyk', name:'陳永康', group:'chen', room:3, breakfast:true },
   { id:'ysy', name:'楊淑媛', group:'chen', room:3, breakfast:true },
   { id:'cwl', name:'陳玟玲', group:'chen', room:2, breakfast:true },

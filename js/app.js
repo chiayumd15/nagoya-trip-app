@@ -409,6 +409,20 @@ function aiSettingsModal() {
   <div class="btnrow" style="margin-top:12px"><button class="btn primary block" id="aiKeySave">儲存</button></div>`;
 }
 
+function renderFlight(p) {
+  if (!p?.eticket) return '';
+  const fl = p.group === 'yang' ? {no:'JX822',route:'TPE → KIX',date:'10/10',time:'10:15→18:45'} : {no:'JX838',route:'TPE → NGO',date:'10/13',time:'15:55→18:45'};
+  return '<div class="card tape"><h2>✈️ 我的機位</h2><div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div style="font-size:2.2em;font-weight:700;font-family:monospace;color:var(--persimmon)">' + esc(p.seat) + '</div><div><div class="small muted">星宇航空 ' + fl.no + ' · ' + fl.date + '</div><div class="small">' + fl.route + ' · ' + fl.time + '</div><div class="tiny muted">電子機票 ' + esc(p.eticket) + '</div></div></div></div>';
+}
+
+function renderEsim(p) {
+  if (!p?.esim) return '';
+  const e = p.esim;
+  const labels = {plan:'方案',expires:'有效期限',iccid:'ICCID',smdp:'SM-DP+',code:'啟用碼',apn:'APN',apnUser:'APN 用戶',apnPass:'APN 密碼'};
+  const fields = Object.entries(e).filter(([k]) => labels[k]);
+  return '<div class="card tape"><h2>📡 我的 eSIM</h2><table style="width:100%;font-size:.85em">' + fields.map(([k,v]) => '<tr><td style="padding:4px 8px 4px 0;color:var(--muted);white-space:nowrap">' + (labels[k]||k) + '</td><td style="padding:4px 0;word-break:break-all;font-family:monospace;font-size:.9em">' + esc(v) + '</td></tr>').join('') + '</table><div class="tiny muted" style="margin-top:8px">⚠️ 出發當天在台灣掃 QR code 安裝（需網路），掃描後顯示「啟用中」請勿刪除。</div></div>';
+}
+
 /* ===== 更多 ===== */
 function renderMore() {
   const m = me();
@@ -419,8 +433,8 @@ function renderMore() {
   const mych = state.checks[pk] || {};
   const done = allItems.filter(k => mych[k]).length; const hiddenCount = Object.keys(hidden).length;
   const ck = cats.map(c => `<details ${c.cat.startsWith('證件') ? 'open' : ''}><summary>${esc(c.cat)} <span class="tiny muted">${c.items.filter(i => mych[c.cat + '|' + ckT(i)]).length}/${c.items.length}</span></summary><div class="in">${c.items.map(i0 => { const i = ckT(i0), u = ckU(i0); const k = c.cat + '|' + i; const hid = 'ck-' + btoa(unescape(encodeURIComponent(k))).replace(/[^a-z0-9]/gi, ''); return `<div class="ck ${mych[k] ? 'done' : ''}" data-k="${esc(k)}"><div class="ck-in"><input type="checkbox" id="${hid}" data-act="ck" data-k="${esc(k)}" ${mych[k] ? 'checked' : ''}><label for="${hid}">${esc(i)}</label>${u ? `<a class="btn sm ghost" target="_blank" rel="noopener" href="${u}" style="flex:0 0 auto">🔗 開</a>` : ''}</div></div>`; }).join('')}</div></details>`).join('');
-  const people = T.PEOPLE.map(p => `<tr><td><span class="badge-g ${p.group}">${T.GROUPS[p.group].short}</span>${p.name}</td><td>房 ${p.room}</td><td>${p.breakfast ? '🍳 含' : '— 不含'}</td><td class="tiny">${p.group === 'yang' ? '10/10 JX822' : '10/13 JX838'}</td></tr>`).join('');
-  return `<div class="card tape tilt-l"><div class="row between"><h2>🧳 行李 Checklist${m ? ` · ${m.name}` : ''}</h2><span class="small muted tab-num">${done}/${allItems.length}</span></div><div class="progress"><i style="width:${allItems.length ? done / allItems.length * 100 : 0}%"></i></div><div class="tiny muted" style="margin-top:4px">每個人的清單分開記；先選「我是誰」。往左滑可以刪掉不需要的項目。${hiddenCount ? ` <button class="btn sm ghost" data-act="ckrestore">還原 ${hiddenCount} 項</button>` : ''}</div>${ck}<div class="row" style="margin-top:8px"><input type="text" id="ckNew" placeholder="自己加一項…" style="flex:1"><button class="btn sm" data-act="ckadd">${ico('plus')}加</button></div></div>
+  const people = T.PEOPLE.map(p => `<tr><td><span class="badge-g ${p.group}">${T.GROUPS[p.group].short}</span>${p.name}</td><td>房 ${p.room}</td><td>${p.breakfast ? '🍳 含' : '— 不含'}</td><td class="tiny">${p.group === 'yang' ? '10/10 JX822' : '10/13 JX838'}${p.seat ? ' · <b>'+p.seat+'</b>' : ''}</td></tr>`).join('');
+  return `${renderFlight(m)}${renderEsim(m)}<div class="card tape tilt-l"><div class="row between"><h2>🧳 行李 Checklist${m ? ` · ${m.name}` : ''}</h2><span class="small muted tab-num">${done}/${allItems.length}</span></div><div class="progress"><i style="width:${allItems.length ? done / allItems.length * 100 : 0}%"></i></div><div class="tiny muted" style="margin-top:4px">每個人的清單分開記；先選「我是誰」。往左滑可以刪掉不需要的項目。${hiddenCount ? ` <button class="btn sm ghost" data-act="ckrestore">還原 ${hiddenCount} 項</button>` : ''}</div>${ck}<div class="row" style="margin-top:8px"><input type="text" id="ckNew" placeholder="自己加一項…" style="flex:1"><button class="btn sm" data-act="ckadd">${ico('plus')}加</button></div></div>
   <div class="card"><h2>👨‍👩‍👧‍👦 11 人名單・房號・航班</h2><div class="tablewrap"><table><thead><tr><th>姓名</th><th>房</th><th>早餐</th><th>去程</th></tr></thead><tbody>${people}</tbody></table></div><div class="tiny muted">分組依出發日：先行組 5 人（10/10）、直飛組 6 人（10/13）。若有誤請告訴家喻。</div><div class="btnrow"><button class="btn sm" data-act="me">切換我是誰</button></div></div>
   <div class="card"><h2>⚙️ 設定</h2>
     <label class="switch"><span>🚗 自駕模式（景點自動顯示停車・加油）</span><input type="checkbox" data-act="toggle-drive" ${state.settings.drive ? 'checked' : ''}></label>
