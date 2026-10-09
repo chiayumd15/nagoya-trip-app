@@ -280,7 +280,8 @@ const DAYS = [
     items:[
       { time:'07:30', type:'transport', title:'抵達桃園機場 T1', desc:'星宇 JX822 櫃台報到、託運。桃機 T1 星宇貴賓室不在此票種。' },
       { time:'10:15', type:'flight', title:'JX822 桃園 → 關西', desc:'A350-1000，2 小時 45 分，14:00 抵達 KIX T1。' },
-      { time:'14:00', type:'transport', title:'關西機場入境・買 ICOCA', desc:'Visit Japan Web QR 先截圖。入境後搭 JR 關空快速到「新今宮」（約 65 分，¥1,210）或南海電鐵到「新今宮」（約 50 分，¥930）。旅館就在新今宮站旁 1 分鐘。', nav:'q:関西空港駅' },
+      { time:'14:00', type:'transport', title:'關西機場入境', desc:'Visit Japan Web QR 先截圖。入境＋領行李約 1 小時。' },
+      { time:'15:05', type:'transport', title:'南海 Rapi:tα 10號 → 新今宮 15:42', desc:'已購票（KKday／Linktivity）5 人，01 號車 40–44 號座位。關西機場 → 新今宮 37 分。出站步行 1 分到旅館。', nav:'q:関西空港駅' },
       { time:'16:00', type:'hotel', title:'白樺の宿 恵美須 Check-in', desc:'セルフチェックイン（自助入住）。公寓式旅館，兩間臥室，附廚房・洗衣機。通天閣步行 4 分、道頓堀步行 15 分。只住一晚，明天帶行李去京都。', nav:'q:白樺の宿 恵美須 大阪' },
       { time:'17:30', type:'spot', spot:'dotonbori', title:'道頓堀・心齋橋 散步' },
       { time:'18:30', type:'meal', title:'晚餐：道頓堀 邊走邊吃 or 大阪燒', desc:'推薦：美津の（大阪燒，排隊）／ たこ焼十八番／ 一蘭 道頓堀店（分店不用排太久）／ 蟹道樂 本店（想吃螃蟹的話要預約）。', nav:'q:美津の 道頓堀' },
